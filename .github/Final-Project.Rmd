@@ -1,0 +1,334 @@
+---
+title: "Titanic Survival Statistics"
+author: "Max Raven"
+date: "2023-04-20"
+output:
+  slidy_presentation: default
+  ioslides_presentation: default
+  
+---
+# Introduction
+[Link to Titanic Survival Dataset](./TitanicSurvival.csv)
+
+The Titanic was one of the first tragedies I learned about growing up.  Whether that is because of the monumental impact it has had on boating safety regulations or simply because of Leonardo DiCaprio, it will never be forgotten.  
+
+Have you ever wondered what the difference in survival is between man and women, or what was the survival rate if you happened to be on there depending on age, passenger class, or sex on the titanic.  The data I decided to work with was TitanicSurvival dataset provided by R studio. This data was compiled by Thomas Cason and provides the details of the names, sex, age, passenger class, and if they survived or not of 1309 passengers on board. Age is missing for 263 of the passengers
+
+This dataset intrigued me because it provided the actual numerical ages of the passengers so I can classify the individuals by if they are an adult, teenager or a child.  My approach is to analyze the data and filter the dataset in order to answer the questions of what would be the likely hood of survival by different sex's, ages, passenger class, and then analyzing most likely and unlikely to survive. 
+
+![](Titanicboat2.png){width=50% style="display: block; margin: 0 auto;"}
+
+
+# Questions:
+
+1. The total number of survivers per passenger class?
+
+2. The total number of survivers per sex?
+
+3. The total number of survivers per age?
+
+4. Now lets classify the individuals by the type of age group and see how it is different.
+
+5. The total number of survivers per sex and passenger class?
+
+6. The total number of survivers per age and passenger class?
+
+7. The total number of survivers per age and sex?
+
+8. The total numbers of survivers per female sex,age, and passenger class?
+
+9. The total numbers of survivers per male sex,age, and passenger class?
+
+# Key Terms for Unfiltered Data & Filtered Data
+
+- X: Name of passenger
+
+- survived: If that passenger survived or not
+
+- sex: Gender of passenger
+
+- age: numerical age of passenger
+
+- passengerClass: The type of class the passenger was in
+
+- Category: Age group classified
+
+# Key Values and Calculations:
+
+- total passengers:   1309
+
+- total passengers with missing ages:     1046 
+
+- passenger class and/or sex:     (survivors / total passengers)
+
+- age or involving age:   (survivors / total passengers with missing ages)
+
+# Packages Used
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+#using this for data manipulation
+library(dplyr)
+#using this to tidy up the data
+library(tidyr)
+#using for visual data
+library(ggplot2)
+```
+
+# Unfiltered Data
+```{r}
+Titanic_Survival <- read.csv("TitanicSurvival.csv")
+glimpse(Titanic_Survival)
+```
+
+
+# 1. The total number of survivers per passenger class?
+
+```{r}
+
+num_surv_pc <- Titanic_Survival %>%
+  filter(survived == 'yes') %>%
+  group_by(passengerClass) %>% 
+  summarize(survivors = n())
+
+num_surv_pc %>% 
+ ggplot(aes(passengerClass, survivors, fill = passengerClass)) + 
+  geom_bar(color = 'white',stat = 'identity') +
+  scale_fill_manual(values = c("gold","grey","darkorange"))+
+  theme_dark() + 
+  geom_text(aes(label = survivors, vjust = 5)) +
+  labs(title = "How many survivors per passenger class?", 
+       x = "Passenger Class", y = "Survivors")
+  
+```
+
+## Percentage of surviving depending on passenger class:
+- 1st: 15.27%
+- 2nd: 9.09%
+- 3rd: 13.83%
+
+# 2. The total number of survivors per sex?
+
+```{r}
+num_surv_sex <-Titanic_Survival %>% 
+  filter(survived == 'yes') %>% 
+  group_by(sex) %>% 
+  summarize(survivors = n())
+
+num_surv_sex %>% 
+  ggplot(aes(sex, survivors, fill = sex)) + 
+  geom_bar(color = 'black',stat = 'identity') +
+  scale_fill_manual(values = c("hotpink","blue"))+
+  theme_bw() + 
+  geom_text(aes(label = survivors, vjust = 5)) +
+  labs(title = "How many survivors per sex?", 
+       x = "sex", y = "Survivors")
+```
+
+## Percentage of surviving depending on sex:
+- Female: 25.90%
+- Male: 12.30%
+
+# 3. The total number of survivers per age
+
+```{r}
+Titanic_Survival %>% na.omit(Titanic_Survival['age']) %>% 
+  ggplot(aes(age)) + 
+  geom_histogram(color = 'black', fill = 'yellow', binwidth = 1) +
+  theme_dark() +
+  labs(title = "The number of survivors per age", x = "Age", y = "Survived")
+
+```
+
+# 4. Now lets classify the individuals by the type of age group and see how it is different
+
+```{r}
+classified_age <- Titanic_Survival %>% 
+  na.omit(Titanic_Survival['age']) %>% 
+  mutate(Category = case_when(age >= 18 ~ "Adult 18+", age %in% c(13,14,15,16,17) ~ "Teen 13-17", age < 13 ~ "Child 0.1-12")) 
+
+classified_age %>% 
+  na.omit(Titanic_Survival['age']) %>% 
+  filter(survived == "yes") %>% 
+  group_by(Category) %>% 
+  summarize(survivors = n()) %>% 
+  ggplot(aes(Category,survivors, fill = Category)) + 
+  geom_bar(color = 'black',stat = 'identity') + 
+  scale_fill_manual(values = c("red","skyblue","lightgreen"))+
+  theme_grey()+
+  geom_text(aes(label = survivors, vjust = 1.5)) +
+  labs(title = "The number of survivors per classification of age" ,x = "Category", y = "Survivors") 
+
+```
+
+## Percentage of surviving depending on Age Group:
+- Adult: 33.08%
+- Child: 5.16%
+- Teen: 2.58%
+
+# 5. The total numbers of survivors per category and sex
+
+```{r}
+ages1 <- Titanic_Survival %>% 
+  na.omit(Titanic_Survival['age']) %>% 
+  mutate(Category = case_when(age >= 18 ~ "Adult", age %in% c(13,14,15,16,17) ~ "Teen", age < 13 ~ "Child")) 
+
+var5 <- ages1 %>% 
+  filter(survived == 'yes') %>% 
+  group_by(sex,Category) %>% 
+  count(survived) 
+
+var5$grouped_v5 <- paste(var5$sex, var5$Category, sep = "-")
+
+  var5 %>% 
+    group_by(grouped_v5) %>% 
+    ggplot(aes(x = grouped_v5, y = n, fill = sex)) + 
+    geom_bar(color = 'black',stat = 'identity') +
+    scale_fill_manual(values = c("lightpink","skyblue"))+
+    theme_bw() + 
+    geom_text(aes(label = n, vjust = 1.5)) +
+    labs(title = "How many survivors per sex and age group?", 
+       x = "sex and category", y = "Survivors")
+
+```
+
+## Percentage of surviving depending on Sex and Age Group:
+- Female-Adult: 23.52%
+- Female-Child: 5.16%
+- Female-Teen: 2.29%
+- Male-Adult: 9.94%
+- Male-Child: 5.16%
+- Male-Teen: 0.38%
+
+# 6. The total number of survivers per sex and passenger class
+
+```{r}
+var6 <- ages1 %>% 
+  filter(survived == 'yes') %>% 
+  group_by(sex,passengerClass) %>% 
+  count(survived) 
+
+var6$grouped_v6 <- paste(var6$sex, var6$passengerClass, sep = "-")
+  
+  var6 %>% 
+    group_by(grouped_v6) %>% 
+    ggplot(aes(x = grouped_v6, y = n, fill = sex)) + 
+    geom_bar(color = 'black', stat = 'identity') +
+    scale_fill_manual(values = c("violet","lightblue"))+
+    theme_bw() + 
+    geom_text(aes(label = n, vjust = 3)) +
+    labs(title = "How many survivors per sex and Passenger Class?", 
+       x = "Sex and Passenger class", y = "Survivors")
+
+```
+
+## Percentage of surviving depending on sex and passenger class:
+- Female 1st: 9.78%
+- Female 2nd: 7.03%
+- Female 3rd: 5.50%
+- Male 1st: 4.05%
+- Male 2nd: 1.76%
+- Male 3rd: 4.50%
+
+
+# 7. The total number of survivers per age and passenger class
+
+```{r}
+var7 <- ages1 %>% 
+  filter(survived == 'yes') %>% 
+  group_by(Category,passengerClass) %>% 
+  count(survived) 
+
+var7$grouped_v7 <- paste(var7$Category, var7$passengerClass, sep = "-")
+  
+  var7 %>% 
+    group_by(grouped_v7) %>% 
+    ggplot(aes(x = grouped_v7, y = n, fill = Category)) + 
+    geom_bar(color = 'black', stat = 'identity') +
+    scale_fill_manual(values = c("red","skyblue","lightgreen"))+
+    theme_bw() + 
+    geom_text(aes(label = n, vjust = 1)) +
+    labs(title = "How many survivors per Age Classification and Passenger Class?", 
+       x = "Age Classification and Passenger class", y = "Survivors")
+
+
+```
+
+## Percentage of surviving depending on Sex and Age Group:
+- Adult-1st: 16.06%
+- Adult-2nd: 8.22%
+- Adult-3rd: 8.80%
+- Child-1st: 0.38%
+- Child-2nd: 2.30%
+- Child-3rd: 2.49%
+- Teen-1st: 0.86%
+- Teen-2nd: 0.48%
+- Teen-3rd: 1.24%
+
+
+# 8. The total numbers of survivers per male sex,age, and passenger class
+
+```{r}
+
+var8 <- ages1 %>% 
+  filter(survived == 'yes') %>% 
+  group_by(Category,passengerClass,sex) %>% 
+  count(survived) 
+
+var8$grouped_v8 <- paste(var8$Category, var8$passengerClass, sep = "-")
+  
+  var8 %>% 
+    group_by(grouped_v8) %>%
+    filter(sex == 'male') %>% 
+    ggplot(aes(x = grouped_v8, y = n, fill= sex)) + 
+    geom_bar(fill = 'lightblue',color = 'black',stat = 'identity') +
+    theme_bw()+
+    geom_text(aes(label = n, vjust = 1)) +
+    labs(title = "How many survivors per Male Sex, Passenger Class, and Age?", 
+       x = "Age , Passenger Class, and Male Sex", y = "Survivors")
+
+```
+
+## Percentage of surviving depending on Male Sex, Age Group, Passenger Class:
+- Male-Adult-1st: 4.49%
+- Male-Adult-2nd: 1.15%
+- Male-Adult-3rd: 4.30%
+- Male-Child-1st: 0.38%
+- Male-Child-2nd: 1.05%
+- Male-Child-3rd: 1.15%
+- Male-Teen-1st: 0.19%
+- Male-Teen-2nd: N/A
+- Male-Teen-3rd: 0.19%
+
+
+# 9. The total numbers of survivers per female sex,age, and passenger class
+
+```{r}
+var8 %>% 
+    filter(sex == 'female') %>% 
+    group_by(grouped_v8) %>%
+    ggplot(aes(x = grouped_v8, y = n, fill= sex)) + 
+    geom_bar(fill = 'pink',color = 'black', stat = 'identity') +
+    theme_bw()+
+    geom_text(aes(label = n, vjust = 1)) +
+    labs(title = "How many survivors per Female Sex, Passenger Class, and Age?", 
+       x = "Age , Passenger Class, and Female Sex", y = "Survivors")
+
+```
+
+## Percentage of surviving depending on Female Sex, Age Group, Passenger Class:
+- Female-Adult-1st: 11.57%
+- Female-Adult-2nd: 7.07%
+- Female-Adult-3rd: 4.49%
+- Female-Child-1st: N/A
+- Female-Child-2nd: 1.24%
+- Female-Child-3rd: 1.34%
+- Female-Teen-1st: 0.67%
+- Female-Teen-2nd: 0.48%
+- Female-Teen-3rd: 1.05%
+
+
+# Summary
