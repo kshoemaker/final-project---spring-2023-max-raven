@@ -32,9 +32,9 @@ Have you ever wondered what the difference in survival is between man and women,
 
 7. The total number of survivors per age and sex?
 
-8. The total numbers of survivors per female sex,age, and passenger class?
+8. The total numbers of survivors per male sex,age, and passenger class?
 
-9. The total numbers of survivors per male sex,age, and passenger class?
+9. The total numbers of survivors per female sex,age, and passenger class?
 
 
 # Packages Used
