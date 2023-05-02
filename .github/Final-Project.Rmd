@@ -78,9 +78,6 @@ glimpse(Titanic_Survival)
 
 - total passengers with missing ages:     1046 
 
-- passenger class and/or sex:     (survivors / total passengers)
-
-- age or involving age:   (survivors / total passengers with missing ages)
 
 
 # 1. The total number of survivers per passenger class?
