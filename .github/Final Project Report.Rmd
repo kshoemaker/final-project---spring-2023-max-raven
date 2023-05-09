@@ -1,0 +1,346 @@
+---
+title: "Final Project Report"
+author: "Max Raven"
+date: "2023-05-08"
+output: html_document
+---
+
+# Introduction
+
+[Link to Download Titanic Survival Dataset](TitanicSurvival.csv)
+
+
+The Titanic was one of the first tragedies I learned about growing up. Whether that is because of the monumental impact it has had on boating safety regulations or simply because of Leonardo DiCaprio, it will never be forgotten.
+
+Have you ever wondered what the difference in survival is between man and women, or what was the survival rate if you happened to be on their depending on age, passenger class, or sex on the titanic. The data I decided to work with was Titanic Survival data set provided by R studio. This data was compiled by Thomas Cason and provides the details of the names, sex, age, passenger class, and if they survived or not of 1309 passengers on board. Age is missing for 263 of the passengers.
+
+This data set intrigued me because it provided the actual numerical ages of the passengers so I can classify the individuals by if they are an adult, teenager or a child. My approach is to analyze the data and filter the data set in order to answer the questions of what would be the likely hood of survival by different sex's, ages, passenger class, and then analyzing most likely and unlikely to survive.
+
+
+![](Titanicboat2.png){width="50%" style="display: block; margin: 0 auto;"}
+
+# Questions:
+
+1.  The total number of survivors per passenger class?
+
+2.  The total number of survivors per sex?
+
+3.  The total number of survivors per age?
+
+4.  Now lets classify the individuals by the type of age group and see how it is different.
+
+5.  The total number of survivors per sex and passenger class?
+
+6.  The total number of survivors per age and passenger class?
+
+7.  The total number of survivors per age and sex?
+
+8.  The total numbers of survivors per male sex,age, and passenger class?
+
+9.  The total numbers of survivors per female sex,age, and passenger class?
+
+# Packages Used
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = F, warning = F)
+```
+
+```{r}
+#using this for data manipulation
+library(dplyr)
+#using this to tidy up the data
+library(tidyverse)
+#using for visual data
+library(ggplot2)
+```
+
+# Unfiltered Data
+
+```{r}
+Titanic_Survival <- read.csv("TitanicSurvival.csv")
+glimpse(Titanic_Survival)
+```
+
+# Key Terms for Unfiltered Data & Filtered Data
+
+-   X: Name of passenger
+
+-   survived: If that passenger survived or not
+
+-   sex: Gender of passenger
+
+-   age: numerical age of passenger
+
+-   passengerClass: The type of class the passenger was in
+
+-   Category: Age group classified
+
+# Key Values and Calculations:
+
+-   total passengers: 1309
+
+-   The amount of passengers with the 263 missing ages: 1046
+
+# 1. The total number of survivers per passenger class?
+
+- I wanted to first analyze the number of survivors per passenger class and the percentage that survived of each passenger class.  This way we see the total survivors then the percentage of that class that survived or did not survive. To do this I created a new variable that filtered only those who survived and then used my unfiltered data to show the percentage of survivors versus non survivors.
+ 
+
+```{r}
+
+num_surv_pc <- Titanic_Survival %>%
+  filter(survived == 'yes') %>%
+  group_by(passengerClass) %>% 
+  summarize(survivors = n())
+
+num_surv_pc %>% 
+ ggplot(aes(passengerClass, survivors, fill = passengerClass)) + 
+  geom_bar(color = 'white',stat = 'identity') +
+  scale_fill_manual(values = c("gold","grey","orange"))+
+  theme_dark() + 
+  geom_text(aes(label = survivors, vjust = 5)) +
+  labs(title = "How many survivors per passenger class?", 
+       x = "Passenger Class", y = "Survivors")
+
+Titanic_Survival %>% ggplot(aes(x = passengerClass, fill = survived)) + geom_bar(position = "fill") + theme_bw()+
+labs(title = "The percentage of survivors per passenger class" ,x = "Passenger Class", y = "Survivors")
+  
+```
+
+- What we can observe from these bar graphs is that, although there are more survivors in the third class compared to the second, there is a higher amount of percentage of survivors in the second class as there was less people in it.  Also, the first-class ticket was more expensive, but it was worth it as it was the highest number of total survivors and the highest amount of percentage for survival.
+ 
+ 
+
+# 2. The total number of survivors per sex?
+
+- Next, I wanted to see the total number of survivors per sex and then what the percentage of survival there is for male and female.  I did a similar concept of creating a new variable to filter only those who survived.  Then I used the unfiltered data to analyze what the percentage of survival was for each sex.
+
+```{r, echo = F}
+num_surv_sex <-Titanic_Survival %>% 
+  filter(survived == 'yes') %>% 
+  group_by(sex) %>% 
+  summarize(survivors = n())
+
+num_surv_sex %>% 
+  ggplot(aes(sex, survivors, fill = sex)) + 
+  geom_bar(color = 'black',stat = 'identity') +
+  scale_fill_manual(values = c("pink","skyblue"))+
+  theme_bw() + 
+  geom_text(aes(label = survivors, vjust = 5)) +
+  labs(title = "How many survivors per sex?", 
+       x = "sex", y = "Survivors")
+
+Titanic_Survival %>% ggplot(aes(x = sex, fill = survived)) + geom_bar(position = "fill") + theme_bw()+
+labs(title = "The percentage of survivors per sex" ,x = "sex", y = "Survivors")
+```
+
+
+
+# 3. The total number of survivers per age
+
+- Let's take a look of the total number of survivors per age.  This graph is in increments of one so you can see each specific age's number of survivors.
+
+```{r}
+Titanic_Survival %>% na.omit(Titanic_Survival['age']) %>% 
+  filter(survived == "yes") %>% 
+  ggplot(aes(x = age, fill = survived)) + 
+  geom_histogram(color = 'black', fill = 'yellow', binwidth = 1) +
+  theme_dark() +
+  labs(title = "The number of survivors per age", x = "Age", y = "Survivors")
+
+```
+
+- Young to middle age adults were some of the highest amount of survivors.
+
+# 4. Now lets classify the individuals by the type of age group and see how it is different
+
+- For the two bar graphs and the single box plot, I filtered my data to classify the different age groups.  The first bar graph is the total number of survivors per adults, teens, and children.  The second bar graph is the percentage of survivors per each category I filtered the data into.  The box plot will show us the density of survivors per each age category.
+
+```{r}
+classified_age <- Titanic_Survival %>% 
+  na.omit(Titanic_Survival['age']) %>% 
+  mutate(Category = case_when(age >= 18 ~ "Adult 18+", age %in% c(13,14,15,16,17) ~ "Teen 13-17", age < 13 ~ "Child 0.1-12")) 
+
+classified_age %>% 
+  na.omit(Titanic_Survival['age']) %>% 
+  filter(survived == "yes") %>% 
+  group_by(Category) %>% 
+  summarize(survivors = n()) %>% 
+  ggplot(aes(Category,survivors, fill = Category)) + 
+  geom_bar(color = 'black',stat = 'identity') + 
+  scale_fill_manual(values = c("yellow","skyblue","lightgreen"))+
+  theme_grey()+
+  geom_text(aes(label = survivors, vjust = 1.5)) +
+  labs(title = "The number of survivors per classification of age" ,x = "Category", y = "Survivors")
+
+
+classified_age %>%  na.omit(classified_age['age']) %>% ggplot(aes(x = Category, fill = survived)) + geom_bar(position = "fill") + theme_bw()+
+labs(title = "The percentage of survivors per classification of age" ,x = "Category", y = "Survivors")
+
+classified_age %>% na.omit(classified_age['age']) %>% ggplot(aes(x = age, color = survived, y = Category)) + geom_boxplot()
+
+```
+
+- The first bar graph shows us that the number of adult survivors is exponentially greater than children and teens.  This is something that is expected because the total number of adults is much greater than the other two categories.  The percentage graph shows us though that the adults had the lowest survival rate compared to children and teens.  
+
+# 5. The total numbers of survivors per sex and age
+
+- I used a similar concept as I did before, but instead I grouped together the sex and age category so that I can display both of them combined to show the total survivors and the percentage of those two.
+
+```{r}
+ages1 <- Titanic_Survival %>% 
+  na.omit(Titanic_Survival['age']) %>% 
+  mutate(Category = case_when(age >= 18 ~ "Adult", age %in% c(13,14,15,16,17) ~ "Teen", age < 13 ~ "Child")) 
+
+var5 <- ages1 %>% 
+  filter(survived == 'yes') %>% 
+  group_by(sex,Category) %>% 
+  count(survived) 
+
+var5$grouped_v5 <- paste(var5$sex, var5$Category, sep = "-")
+
+  var5 %>% 
+    group_by(grouped_v5) %>% 
+    ggplot(aes(x = grouped_v5, y = n, fill = sex)) + 
+    geom_bar(color = 'black',stat = 'identity') +
+    scale_fill_manual(values = c("lightpink","skyblue"))+
+    theme_bw() + 
+    geom_text(aes(label = n, vjust = 1.5)) +
+    labs(title = "How many survivors per sex and age group?", 
+       x = "sex and age category", y = "Survivors")
+
+ages1$sexandclass <- paste(ages1$sex, ages1$Category, sep = "-")
+
+ages1 %>%  na.omit(ages1['age']) %>% ggplot(aes(x = sexandclass, fill = survived)) + geom_bar(position = "fill")+ theme_bw()+
+labs(title = "The percentage of survivors per age category and sex" ,x = "Age Category and Sex", y = "Survivors")
+```
+
+- We can tell that women regardless of their age category were the first priority over men.
+
+# 6. The total number of survivers per sex and passenger class
+
+I used the same concept as the sex and age category.  Instead of age category, I created a new variable to group together sex and passenger class, so that the graphs reflected that specific relationship.
+
+```{r, echo = F}
+var6 <- ages1 %>% 
+  filter(survived == 'yes') %>% 
+  group_by(sex,passengerClass) %>% 
+  count(survived) 
+
+var6$grouped_v6 <- paste(var6$sex, var6$passengerClass, sep = "-")
+  
+  var6 %>% 
+    group_by(grouped_v6) %>% 
+    ggplot(aes(x = grouped_v6, y = n, fill = sex)) + 
+    geom_bar(color = 'black', stat = 'identity') +
+    scale_fill_manual(values = c("violet","lightblue"))+
+    theme_bw() + 
+    geom_text(aes(label = n, vjust = 3)) +
+    labs(title = "How many survivors per sex and Passenger Class?", 
+       x = "Sex and Passenger class", y = "Survivors")
+ 
+
+Titanic_Survival$grouped_v11 <- paste(Titanic_Survival$sex, Titanic_Survival$passengerClass, sep = "-")
+  
+Titanic_Survival %>% ggplot(aes(x = grouped_v11, fill = survived)) + geom_bar(position = "fill") + theme_bw()+
+labs(title = "The percentage of survivors per sex and passenger class" ,x = "Sex and Passenger Class", y = "Survivors")
+```
+
+- This bar graph shows us that if you were a woman on the, titanic the worst percentage of survival is fifty percent.  It also shows the more amount of money spent on purchasing your passenger class was a really good investment.
+
+# 7. The total number of survivers per age and passenger class
+
+- To display the relationship of total survivors and the percentage of survivors, I did the same thing, but grouped age category and passenger class together.
+
+```{r, echo = F}
+var7 <- ages1 %>% 
+  filter(survived == 'yes') %>% 
+  group_by(Category,passengerClass) %>% 
+  count(survived) 
+
+var7$grouped_v7 <- paste(var7$Category, var7$passengerClass, sep = "-")
+  
+  var7 %>% 
+    group_by(grouped_v7) %>% 
+    ggplot(aes(x = grouped_v7, y = n, fill = Category)) + 
+    geom_bar(color = 'black', stat = 'identity') +
+    scale_fill_manual(values = c("yellow","skyblue","lightgreen"))+
+    theme_bw() + 
+    geom_text(aes(label = n, vjust = 1)) +
+    labs(title = "How many survivors per Age Classification and Passenger Class?", 
+       x = "Age Classification and Passenger class", y = "Survivors")
+  
+ new_var12 <- ages1 %>% na.omit(ages1['age'])
+
+new_var12$grouped_v21 <- paste(new_var12$Category, new_var12$passengerClass,sep = "-")
+new_var12 %>% ggplot(aes(x = grouped_v21, fill = survived)) + geom_bar(position = "fill")+ theme_bw()+
+labs(title = "The percentage of survivors per classification of age and passenger class" ,x = "Age Category and Passenger Class", y = "Survivors")
+```
+
+- The percentage bar graph shows that children and teens had higher survival rate than almost all the adults besides the first class adults.
+
+# 8. The total numbers of survivors per male sex,age, and passenger class
+
+- In order to display the total number of survivors and the percentage of them for the male sex, age category, and passenger class I used a similar concept.  I created a new variable to filter out only those who survived then combined age category and passenger class together.  I then created the bar graph to filter only the male sex.
+
+```{r}
+
+var8 <- ages1 %>% 
+  filter(survived == 'yes') %>% 
+  group_by(Category,passengerClass,sex) %>% 
+  count(survived) 
+
+var8$grouped_v8 <- paste(var8$Category, var8$passengerClass, sep = "-")
+  
+  var8 %>% 
+    group_by(grouped_v8) %>%
+    filter(sex == 'male') %>% 
+    ggplot(aes(x = grouped_v8, y = n, fill= sex)) + 
+    geom_bar(fill = 'lightblue',color = 'black',stat = 'identity') +
+    theme_bw()+
+    geom_text(aes(label = n, vjust = 1)) +
+    labs(title = "How many survivors per Male Sex, Passenger Class, and Age?", 
+       x = "Age , Passenger Class, and Male Sex", y = "Survivors")
+  
+new_var <- ages1 %>% na.omit(ages1['age']) %>%
+  filter(sex == 'male')
+
+new_var$grouped_v15 <- paste(new_var$Category, new_var$passengerClass,sep = "-")
+  
+new_var %>% ggplot(aes(x = grouped_v15, fill = survived)) + geom_bar(position = "fill")+ theme_bw()+
+labs(title ="The percentage of survivors per male age category and passenger class" ,x = "Male , Age Category, Passenger Class", y = "Survivors")
+
+```
+
+- The reasoning for no survivors in the male, teen, and second-class category was because there was only four and they sadly did not survive.  The percentage graph shows us that male children were the first priority for the male sex.
+
+# 9. The total numbers of survivers per female sex,age, and passenger class
+
+- By using the same concept, but instead filtering it to the female sex, I was able to display the total amount of survivors and the survival percentage of for the female sex, age category, and the passenger class.
+
+```{r, echo = F}
+# Using same variable, but filtering to female for bar graph of total survivors
+var8 %>% 
+    filter(sex == 'female') %>% 
+    group_by(grouped_v8) %>%
+    ggplot(aes(x = grouped_v8, y = n, fill= sex)) + 
+    geom_bar(fill = 'pink',color = 'black', stat = 'identity') +
+    theme_bw()+
+    geom_text(aes(label = n, vjust = 1)) +
+    labs(title = "How many survivors per Female Sex, Passenger Class, and Age?", 
+       x = "Age , Passenger Class, and Female Sex", y = "Survivors")
+
+new_var2 <- ages1 %>% na.omit(ages1['age']) %>%
+  filter(sex == 'female')
+
+new_var2$grouped_v16 <- paste(new_var2$Category, new_var2$passengerClass,sep = "-")
+  
+new_var2 %>% ggplot(aes(x = grouped_v16, fill = survived)) + geom_bar(position = "fill")+ theme_bw()+
+labs(title ="The percentage of survivors per Female age category and passenger class" ,x = "Age Category, Sex, Passenger Class", y = "Survivors")
+```
+
+- The reasoning for no survivors in the female, child, and first class category was because there was only one and she sadly did not survive.
+
+# Summary
+
+The titanic was a tragedy that resulted in many casualties.  A factor that resulted in a lower survival rate in the second and third passenger class compared to the first class was how these classes were set up on the boat.  The third deck was on the very bottom of the ship and the second deck was just right above that. When the titanic crashed these passenger classes got rushed with water before the first class, thus resulting in the third class predominantly being the lowest regardless of sex, age, or passenger class.  A factor that resulted in the total amount of survivors for adults being so high was because there was a greater total amount of adult passengers compared to children and teens.  We see that conclusion with the percentage of survivors with the age category, as adults were the lowest percentage.  After analyzing the data, women were the majority number of total survivors.  This is because women were prioritized regardless of their specific class or age. The higher the class typically showed a higher survival rate.    If you happened to be on the titanic, it paid off in the long run to splurge on the first-class ticket and you also better hope you were a woman.
